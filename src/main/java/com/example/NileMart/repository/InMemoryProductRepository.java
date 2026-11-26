@@ -3,8 +3,11 @@ package com.example.NileMart.repository;
 import com.example.NileMart.common.StoreException;
 import com.example.NileMart.model.Category;
 import com.example.NileMart.model.Product;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 
+import java.io.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,9 +16,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class InMemoryProductRepository implements ProductRepository {
-    public InMemoryProductRepository() {
-        loadSeedProducts();
-    }
+
 
     ConcurrentHashMap<String,Product> productList=new ConcurrentHashMap<String,Product>();
     @Override
@@ -41,26 +42,37 @@ public class InMemoryProductRepository implements ProductRepository {
        productList.put(sku,p);
        return p ;
    }
+    @PostConstruct
+    public void loadCatalog() {
+        InputStream inputStream=getClass().getClassLoader().getResourceAsStream("products.csv");
+        if (inputStream==null) {
+            throw new StoreException(
+                    "The catalog could not be loaded ",
+                    new FileNotFoundException("products.csv was not found.")
+            );}
+        try(BufferedReader bufferedReader=new BufferedReader(new InputStreamReader(inputStream))){
+        String header = bufferedReader.readLine();
+        String line;
+            int count=0 ;
+        while ((line = bufferedReader.readLine()) != null) {
+            String[] parts = line.split(",");
+            Category category = Category.valueOf(parts[2]);
+            BigDecimal price = new BigDecimal(parts[3]);
+            int stock = Integer.parseInt(parts[4]);
+            Product product = new Product(parts[0], parts[1], category, price, stock);
+            productList.put(product.getSku(), product);
+            count++;
+        }System.out.println(" Catalog loaded : " + count + " products");
+        }catch (IOException e) {
+            throw new StoreException(" The catalog could not be loaded", e);
+        }
+    }
 
-   public void loadSeedProducts(){
-       productList.put("PH-X5-128",new Product("PH-X5-128","Smartphone X5 128GB"
-               , Category.ELECTRONICS,new BigDecimal("16000.00"),12));
-       productList.put("ACC-CHG-20W",new Product("ACC-CHG-20W","Fast Charger 20W"
-               , Category.ELECTRONICS,new BigDecimal("650.00"),40));
-       productList.put("ACC-BUDS-6",new Product("ACC-BUDS-6","Wireless Earbuds"
-               , Category.ELECTRONICS,new BigDecimal("1100.00"),8));
-       productList.put("FSH-GAL-001",new Product("FSH-GAL-001","Cotton Galabeya"
-               , Category.FASHION,new BigDecimal("900.00"), 25));
-       productList.put("HOM-PAN-28",new Product("HOM-PAN-28","Non-stick Frying Pan 28cm"
-               , Category.HOME_KITCHEN,new BigDecimal("1200.00"),  3));
-       productList.put("HOM-SPC-RCK",new Product("HOM-SPC-RCK","Wooden Spice Rack"
-               , Category.HOME_KITCHEN,new BigDecimal("750.00"),   10));
-       productList.put("BTY-SUN-50",new Product("BTY-SUN-50","Sun Cream SPF50"
-               , Category.BEAUTY,new BigDecimal("350.00"),  0));
-       productList.put("BK-CAI-TRI",new Product("BK-CAI-TRI","The Cairo Trilogy"
-               , Category.BOOKS,new BigDecimal("450.00"),  15));
-   }
 
+    @PreDestroy
+    public void closeCatalog() {
+        System.out.println("Catalog closed");
+    }
 
 }
 

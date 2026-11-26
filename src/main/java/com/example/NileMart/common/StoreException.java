@@ -5,6 +5,7 @@ public class StoreException extends RuntimeException {
 
         super(message);
     }
+
     public StoreException(String message, Throwable cause){
         super(message ,cause );
     }

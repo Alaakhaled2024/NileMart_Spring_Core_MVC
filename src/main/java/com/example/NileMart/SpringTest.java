@@ -1,7 +1,9 @@
 package com.example.NileMart;
 
+import com.example.NileMart.cart.ShoppingCart;
 import com.example.NileMart.config.AppConfig;
 import com.example.NileMart.notification.NotificationDemo;
+import com.example.NileMart.repository.InMemoryProductRepository;
 import com.example.NileMart.service.ProductService;
 import com.example.NileMart.shipping.ShippingDemo;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -24,6 +26,12 @@ public class SpringTest {
         D.testShipping();
         NotificationDemo notificationDemo=context.getBean(NotificationDemo.class);
         notificationDemo.printNotificationServices();
+        ProductService service1 = context.getBean(ProductService.class);
+        ProductService service2 = context.getBean(ProductService.class);
+         System.out.println(service1==service2);
+        ShoppingCart cart1 = context.getBean(ShoppingCart.class);
+        ShoppingCart cart2 = context.getBean(ShoppingCart.class);
+        System.out.println(cart1==cart2);
         context.close();
     }
 }
